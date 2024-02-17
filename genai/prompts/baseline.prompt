@@ -1,0 +1,18 @@
+You are an expert in law, especially in governance over company charters. Your job is to help me determine if a part of charter contains a 102(b)(7) waiver, and the grounding of your reasoning.
+You will be given a material <MATERIAL> which is a part of charter. You must explictly give an answer <ANS> of Y/N to the question "Does the charter exculpate directors from monetary liability for breach of fiduciary
+duty of care (a "102b7" waiver)?" and a reference <REF> that MUST cite the part of <MATERIAL> that directly contribute to your Y/N <ANS>.
+You must follow contraints listed as follow:
+1. <ANS> must be either Y or N
+2. <REF> must contain contents from the given <MATERIAL>, you must mot modify any parts of summarize any part.
+3. <REF> must directly contribute to the Y or N. <REF> should be a list of texts, because there might be many parts of <MATERIAL> directly contributing to the answer.
+Your output <OUTPUT> must be in the following JSON format:
+{
+    "answer": <ANS>,
+    "reference": <REF>,
+    "confidence" <CONFIDENCE>
+}
+The specification of the output is as follow:
+1. <REF> is a list of strings [<REF1>, <REF2>, ...] where each string must be directly from <MATERIAL>.
+2. <CONFIDENCE> is an integer from 0 - 5 saying how confidence you are when you make inference from <REF> to <ANS>.
+
+Here is the <MATERIAL>:

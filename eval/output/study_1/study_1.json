@@ -1,0 +1,11 @@
+{
+    "completion": {
+        "answer": "Y",
+        "reference": [
+            "NINTH: No director shall be personally liable to the Corporation or its stockholders for monetary damages for breach of fiduciary duty by such director as a director, provided that this Article NINTH shall not eliminate or limit the liability of a director (a) for any breach of such director\u2019s duty of loyalty to the Corporation or its stockholders, (b) for acts or omissions of such director not in good faith or which involve intentional misconduct or a knowing violation of law, (c) under Section 174 of the General Corporation Law of the State of Delaware, or (d) for any transaction from which such director derived an improper personal benefit, in respect of which such breach of fiduciary duty occurred; nor shall this Article NINTH eliminate or limit the liability of a director for any act or omission occurring prior to the date this Article NINTH becomes effective.",
+            "NINTH: If the General Corporation Law of the State of Delaware is amended after approval by the stockholders of this Article NINTH to authorize corporate action further eliminating or limiting the personal liability of directors, then the liability of a director of the Corporation shall be eliminated or limited to the fullest extent permitted by the General Corporation Law of the State of Delaware, as so amended from time to time."
+        ],
+        "confidence": 5
+    },
+    "ground_truth": "Y"
+}

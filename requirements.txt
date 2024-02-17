@@ -1,0 +1,6 @@
+Pyarrow
+pandas
+matplotlib
+openpyxl
+tiktoken
+openai
