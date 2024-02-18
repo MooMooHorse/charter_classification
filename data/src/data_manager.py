@@ -54,11 +54,13 @@ class DataManager():
         '''
         return data_df[cols]
     
-    def drop_unlabeled(self, data_df, col = 'Directors102b7'):
+    def drop_unlabeled(self, data_df, col = ['Directors102b7', 'text']):
         '''
             drop rows with nan in col
         '''
-        return data_df.dropna(subset = [col])
+        # first drop the empty ('') text rows
+        data_df = data_df[data_df['text'] != '']
+        return data_df.dropna(subset = col)
     
     def store_processed_data(self, data_df, fname = 'processed_data.csv'):
         '''
@@ -71,6 +73,7 @@ class DataManager():
             load the processed data
         '''
         return pd.read_csv(os.path.join(data_dir, fname), index_col=0)
+    
 def test_1():
     dm = DataManager()
     data_df = dm.merge_tables()
@@ -81,5 +84,21 @@ def test_1():
     print(data_df.shape)
     dm.store_processed_data(data_df)
 
+def construct_small_dataset(small_dataset_name = 'small_dataset.csv', small_dataset_size = 500, random_state = 0):
+    '''
+        construct a small dataset for testing
+    '''
+    dm = DataManager()
+    data_df = dm.merge_tables()
+    data_df = dm.drop_unlabeled(data_df)
+    data_df = dm.keep_wanted_columns(data_df)
+    data_df = data_df.sample(n = small_dataset_size, random_state = random_state)
+    dm.store_processed_data(data_df, fname = small_dataset_name)
+    # print first 10 rows
+    print(data_df.head(10))
+    print(data_df.shape)
+    print(f'small dataset size: {small_dataset_size}')
+    print(f'small dataset stored at {os.path.join(data_dir, small_dataset_name)}')
+
 if __name__ == '__main__':
-    test_1()
+    construct_small_dataset()

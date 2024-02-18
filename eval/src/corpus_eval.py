@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname((cur_dir))))
 from paths import data_dir, eval_output
 from genai.itf import OpenAIITF
 from data.src.data_manager import DataManager
+from utils.token_ops import num_tokens_from_messages
 class CorpusEvaluator():
     def __init__(self):
         pass
@@ -26,7 +27,7 @@ class CorpusEvaluator():
         # df = pd.read_csv(data_path)
         dm = DataManager()
         itf = OpenAIITF()
-        df = dm.drop_unlabeled(dm.load_processed_data(), col = 'text')
+        df = dm.drop_unlabeled(dm.load_processed_data(fname=csv_file_name), col = 'text')
         print(df.shape)
         text = df['text']
         distr = []
@@ -35,21 +36,21 @@ class CorpusEvaluator():
                 'role' : 'system',
                 'content' : t
             }]
-            num_tokens = itf.num_tokens_from_messages(message)
+            num_tokens = num_tokens_from_messages(message)
             distr.append(num_tokens)
         # plot the distribution of the length of the text
         # generate 2 plots, one for all distribution, the other for distribution of 0 - 128 k length
         import matplotlib.pyplot as plt
 
         plt.hist(distr, bins = 1000)
-        plt.title('# tokens distribution')
+        plt.title('# tokens distribution (small dataset)')
         plt.xlabel('# tokens used per charter')
         plt.ylabel('Frequency')
 
         plt.savefig(os.path.join(eval_output, 'text_length_distribution.png'))
         plt.clf()
         plt.hist(distr, bins = 1000, range = (0, 128000))
-        plt.title('# tokens distribution (0 - 128k)')
+        plt.title('# tokens distribution (0 - 128k, small dataset)')
         plt.xlabel('# tokens used per charter')
         plt.ylabel('Frequency')
         plt.savefig(os.path.join(eval_output, 'text_length_distribution_0_128k.png'))
@@ -67,7 +68,7 @@ class CorpusEvaluator():
         # data_path = os.path.join(data_dir, csv_file_name)
         # df = pd.read_csv(data_path)
         dm = DataManager()
-        df = dm.load_processed_data()
+        df = dm.load_processed_data(fname=csv_file_name)
         col = df[col_name]
         return col.value_counts(normalize = True)
     
@@ -95,13 +96,15 @@ def test_1():
         with open(os.path.join(eval_output, f'{charter_id}_{directors}.txt'), 'w') as f:
             f.write(text)
     print(rows_sampled)
-def test_2():
+def test_2(fname = 'ChartersPanelCCG.csv'):
     ce = CorpusEvaluator()
-    print(ce.measure_Y_N_ratio())
+    fname = 'small_dataset.csv'
+    print(ce.measure_Y_N_ratio(csv_file_name = fname))
 
-def test_3():
+def test_3(fname = 'ChartersPanelCCG.csv'):
     ce = CorpusEvaluator()
-    print(ce.measure_length())
+    fname = 'small_dataset.csv'
+    print(ce.measure_length(csv_file_name = fname))
 
 if __name__ == '__main__':
     test_3()

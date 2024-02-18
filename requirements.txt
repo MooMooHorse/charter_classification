@@ -4,3 +4,5 @@ matplotlib
 openpyxl
 tiktoken
 openai
+scikit-learn
+tqdm

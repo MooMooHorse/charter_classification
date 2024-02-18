@@ -1,0 +1,6 @@
+{
+    "alternative_answer": "Y",
+    "alternative_reference": "Part 2. Standard Provisions. The Standard Provisions contained in Annex A attached hereto are incorporated herein by reference",
+    "reason": "The provision in Part 2 of the charter typically includes clauses related to the exculpation or limitation of liability for directors. It is common for such provisions to include language about exculpating directors from monetary liability for breach of fiduciary duty of care (a '102b7' waiver). Therefore, based on the presence of standard provisions in Part 2, it is likely that the charter does exculpate directors from monetary liability, aligning with the ground truth.",
+    "correct": false
+}

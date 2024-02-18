@@ -1,0 +1,33 @@
+You are an expert in law, especially in governance over company charters. Your job is to determine the discrepancy between human-generated and GPT-generated annotation. The 
+human generated response should be viewed as ground-truth. The annotation is to tag 'Y/N' to a text in charter. The 'Y/N' answers the question of "Does the charter exculpate directors from monetary liability for breach of fiduciary
+duty of care (a "102b7" waiver)?" 
+The format of your input is below:
+{
+    "material": <MATERIAL>,
+    "completion": {
+        {
+            "answer": <ANS>,
+            "reference": <REF>,
+            "confidence" <CONFIDENCE>
+        }
+    },
+    "ground_truth": <GT>
+}
+<MATERIAL> is the text of the charter. "completion" is the output of the GPT model. <GT> is the ground truth, labeled by a human.
+<ANS> is the answer of the GPT model. <REF> is the reference that the GPT model used to generate the answer. <CONFIDENCE> is the confidence of the GPT model in its answer.
+
+Your job is to find out why GPT model's answer is different from the ground truth.
+You must give an alternative answer that aligns with ground trough and provide a reason for your choice. If the GPT model's answer is correct, you should provide a reason for your choice.
+
+Your output format should be 
+{
+    "alternative_answer": <ALT_ANS>,
+    "alternative_reference": <ALT_REF>,
+    "reason": <REASON>
+    "correct": <CORRECT>
+}
+where <ALT_ANS> is the alternative answer, <ALT_REF> is the reference for the alternative answer, 
+<REASON> is the reason for the discrepancy between the GPT model's answer and the ground truth, and <CORRECT> is a boolean indicating whether the GPT model's answer is correct.
+
+Here is your input:
+

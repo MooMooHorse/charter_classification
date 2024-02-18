@@ -1,0 +1,6 @@
+{
+    "alternative_answer": "Y",
+    "alternative_reference": "ARTICLE TWELVE. No director of the Company shall be liable to the Company or its stockholders for monetary damages for breach of fiduciary duty as a director, except to the extent such an exemption from liability or limitation thereof is not permitted under the Delaware General Corporation Law as presently in effect or as the same may hereafter be amended. No amendment to or repeal of these provisions shall apply to or have any effect on the liability or alleged liability of any director of the Company for or with respect to any acts or omissions of such director occurring prior to such amendment or repeal.",
+    "reason": "The provision in Article Twelve clearly states that directors are not liable for monetary damages for breach of fiduciary duty. This aligns with the ground truth that directors are exculpated from monetary liability, so the answer should be 'Y'.",
+    "correct": true
+}

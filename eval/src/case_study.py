@@ -4,12 +4,14 @@ import pandas as pd
 import json
 import traceback
 
-from typing import List, Tuple
+from typing import List, Tuple, Literal
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(os.path.dirname((cur_dir))))
 from paths import data_dir, eval_output, prompt_dir, openAI_dir
 from data.src.data_manager import DataManager
 from genai.itf import OpenAIITF
+from utils.token_ops import truncate_string_by_tokens
+from utils.completion import get_chat_completion
 
 def _get_first_k_case_text_w_ground_truth(k: int = 1):
     dm = DataManager()
@@ -19,7 +21,7 @@ def _get_first_k_case_text_w_ground_truth(k: int = 1):
     indices = df.head(k)['charter_id'].tolist()
     return text[0:k], director[0:k], indices[0:k]
 
-def _get_l_to_r_case_text_w_ground_truth(l: int, r: int):
+def _get_l_to_r_case_text_w_ground_truth(l: int, r: int, csv_file_name = 'processed_data.csv'):
     '''
         extract l to r rows from the csv file.
         
@@ -34,7 +36,7 @@ def _get_l_to_r_case_text_w_ground_truth(l: int, r: int):
             charter_id unique for each charter
     '''
     dm = DataManager()
-    df = dm.load_processed_data()
+    df = dm.load_processed_data(csv_file_name = csv_file_name)
     r = min(r, len(df))
     sliced_df = df.iloc[l:r+1]
     text = sliced_df['text'].tolist()
@@ -58,20 +60,7 @@ def _assemble_message_list(material, eval_prompt = 'baseline.prompt'):
     ]
     return message_list
 
-def _get_chat_completion(messages:List, itf: None, max_tokens = 1000, model = 'gpt-3.5-turbo-0125') -> str:
-    if itf is None:
-        itf = OpenAIITF()
-        itf.initialize_env()
-    try:
-        return itf.get_chat_completion_content(messages, max_tokens=1000, model='gpt-3.5-turbo-0125')
-    except Exception as e:
-        # encapsulate the exception and store it in the log
-        error_log = {
-            'answer' : 'E',
-            'error': str(e),
-            'reference': traceback.format_exc()
-        }
-        return json.dumps(error_log)
+
 
 def _store_reuslt(material, completion, ground_truth, index = '1'):
     '''
@@ -100,7 +89,7 @@ def study_1_case(eval_prompt = 'baseline.prompt'):
     material = material[0]
     ground_truth = ground_truth[0]
     messages = _assemble_message_list(material, eval_prompt)
-    completion = _get_chat_completion(messages)
+    completion = get_chat_completion(messages)
     _store_reuslt(material, completion, ground_truth)
     return completion, ground_truth
 
@@ -110,9 +99,53 @@ def study_first_k_cases(k:int = 2, eval_prompt = 'baseline.prompt', start_row = 
     itf.initialize_env()
     for i in range(k):
         messages = _assemble_message_list(material[i], eval_prompt) 
-        completion = _get_chat_completion(messages, itf)
+        completion = get_chat_completion(messages, itf)
         _store_reuslt(material[i], completion, ground_truth[i], index = str(indices[i]))
     return completion, ground_truth
+
+def _load_embedding(fname = "embeddings.json"):
+        with open(os.path.join(eval_output, fname), 'r') as f:
+            return np.array(json.load(f))
+
+def _store_embedding(embeddings, fname = "embeddings.json"):
+    with open(os.path.join(eval_output, fname), 'w') as f:
+        f.write(json.dumps(embeddings.tolist()))
+
+def embeddeing_and_cluster(texts:List[str], ids:List[str], num_clusters = 5, itf = None):
+    import numpy as np
+    from sklearn.cluster import KMeans
+    import openai
+    from scipy.spatial.distance import cdist
+    
+    
+    if itf is None:
+        itf = OpenAIITF()
+        itf.initialize_env()
+    
+    errors = []
+    try:
+        # Generate embeddings for each text
+        embeddings = itf.get_embeddings(texts)
+    except Exception as e:
+        # encapsulate the exception and store it in the log
+        error_log = {
+            'answer' : 'E',
+            'error': str(e),
+            'reference': traceback.format_exc()
+        }
+        errors.append(json.dumps(error_log))
+    
+    kmeans = KMeans(n_clusters=num_clusters, init='k-means++', random_state=42)
+    kmeans.fit(embeddings)
+    
+    _store_embedding(embeddings)
+    
+    closest_texts_indices = np.argmin(cdist(embeddings, kmeans.cluster_centers_, 'euclidean'), axis=0)
+    representative_texts = [texts[index] for index in closest_texts_indices]
+
+    selected_ids = [ids[index] for index in closest_texts_indices]
+
+    return representative_texts, selected_ids, errors
 
 def evaluate_study_20():
     evaluate_dir = os.path.join(eval_output, 'study_20')
@@ -136,8 +169,55 @@ def evaluate_study_20():
                 ave_confidence += data['completion']['confidence']
     print(f'Errors: {num_errors}, Hit: {hit}, Miss: {miss}')
     print(f'Average confidence: {ave_confidence/(hit + miss)}')
+
+
+
+def apply_embedding_to_study_20():
+    """
+    Note
+    ----
+    v1.0 directly truncate the text to 8191 tokens, without splitting the text into multiple parts
+    """
+    evaluate_dir = os.path.join(eval_output, 'study_20')
+    # enumberate the texts and extract their ids from filename study_{id}.json
+    texts = []
+    ids = []
+    itf = OpenAIITF()
+    itf.initialize_env()
+    for file in os.listdir(evaluate_dir):
+        with open(os.path.join(evaluate_dir, file), 'r') as f:
+            data = json.load(f)
+            completion = data['completion']['answer']
+            ground_truth = data['ground_truth']
+            if completion == ground_truth or completion == 'E':
+                continue
+            texts.append(truncate_string_by_tokens(data['material'], limit = 8000))
+            ids.append(file.split('.')[0].split('_')[1])
+
+    texts, ids, errors = embeddeing_and_cluster(texts, ids, num_clusters=5, itf = itf)
+    print(ids)
+    print(f''' there are {len(errors)} errors in the process of embedding and clustering''')
+    print(f'''\033[1;31;40m{errors}\033[0m''')
+
+def apply_difference_evaluation(study_dir = 'study_20', 
+                                study_ids = ['1002037B20070619', '1002910N20170628', '1004434C20170614', '100726B20161026', '1002910E20170628'],
+                                prompt_name = 'difference-evaluation.prompt'):
+    itf = OpenAIITF()
+    itf.initialize_env()
+    for study_id in study_ids:
+        with open(os.path.join(eval_output, study_dir, f'study_{study_id}.json'), 'r') as f:
+            data = json.load(f)
+            # data['material'] = truncate_string_by_tokens(data['material'], limit = 16000)
+            messages = _assemble_message_list(str(data), eval_prompt = prompt_name) 
+            completion = get_chat_completion(messages, itf, max_tokens = 2000)
+            output_path = os.path.join(eval_output, f'{study_id}_diff.json')
+            with open(output_path, 'w') as f:
+                f.write(completion)
+
+
 if __name__ == '__main__':
     # print(study_1_case())
     # study_first_k_cases(start_row=100, k=8)
-    evaluate_study_20()
-    
+    # evaluate_study_20()
+    # apply_difference_evaluation()
+    pass

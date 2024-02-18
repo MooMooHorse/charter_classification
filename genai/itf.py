@@ -1,6 +1,8 @@
 from typing import Dict, List
 import os
 import sys
+import numpy as np
+from tqdm import tqdm 
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.dirname((cur_dir)))
 from paths import openai_config_path
@@ -10,31 +12,6 @@ class OpenAIITF():
     def __init__(self):
         self.logger = OpenAI_Logger()
         
-
-    def num_tokens_from_messages(self, messages, model="gpt-3.5-turbo-0613"):
-        """
-            Returns the number of tokens used by a list of messages.
-            Source:
-                https://platform.openai.com/docs/guides/text-generation/managing-tokens
-        """
-        import tiktoken
-        try:
-            encoding = tiktoken.encoding_for_model(model)
-        except KeyError:
-            encoding = tiktoken.get_encoding("cl100k_base")
-        if model == "gpt-3.5-turbo-0613":  # note: future models may deviate from this
-            num_tokens = 0
-            for message in messages:
-                num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
-                for key, value in message.items():
-                    num_tokens += len(encoding.encode(value))
-                    if key == "name":  # if there's a name, the role is omitted
-                        num_tokens += -1  # role is always required and always 1 token
-            num_tokens += 2  # every reply is primed with <im_start>assistant
-            return num_tokens
-        else:
-            raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
-        See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
     def get_chat_completion(self, messages, model="gpt-3.5-turbo", max_tokens=150, temperature=0.7, 
                             top_p=1.0, frequency_penalty=0.0, presence_penalty=0.0, 
                             stop=None):
@@ -56,6 +33,22 @@ class OpenAIITF():
             presence_penalty=presence_penalty,
             stop=stop
         )
+    def get_embeddings(self, texts: List[str], model="text-embedding-3-small") -> np.ndarray:
+        '''
+        Get the embeddings of the texts using the model specified.
+        
+        Source:
+            https://platform.openai.com/docs/guides/embeddings/use-cases
+        '''
+        def _get_embedding(text, client, model):
+            text = text.replace("\n", " ")
+            return client.embeddings.create(input = [text], model=model).data[0].embedding
+        from openai import OpenAI
+        client = OpenAI()
+        embeddings = []
+        for text in tqdm(texts, desc="Getting embeddings"):
+            embeddings.append(_get_embedding(text, client, model))
+        return np.array(embeddings)
     
     def get_chat_completion_content(self, messages, model="gpt-3.5-turbo", max_tokens=150, temperature=0.7,
                                     top_p=1.0, frequency_penalty=0.0, presence_penalty=0.0, stop=None):
