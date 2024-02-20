@@ -226,6 +226,6 @@ if __name__ == '__main__':
     # print(study_1_case())
     # study_first_k_cases(start_row=100, k=8)
     # evaluate_study_20()
-    # apply_difference_evaluation()
-    evaluate_study(study_name='baseline')
+    apply_difference_evaluation()
+    # evaluate_study(study_name='baseline')
     # apply_difference_evaluation(study_dir='few-shots-CoT', study_ids=['104918C20120606', '730000E19831014', '900075D20161216', '1002637D20070510'])

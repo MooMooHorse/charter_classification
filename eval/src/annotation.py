@@ -112,8 +112,14 @@ def evaluate_study_small_dataset(version: version_evaluate_small_dataset = 'base
             completion = iter_get_result(material[i], eval_prompt_name, itf, model_name=model_name, temperature=temperature)
         _store_reuslt(material[i], json.dumps(completion), ground_truth[i], index = str(indices[i]))
     
-def test_1():
-    evaluate_study_small_dataset(version='self-consistency', start_row=1, k=99, temperature=0.8, max_iter=2)
+def evaluate_self_consitency(start = 0, num_charters_to_evaluate = 100):
+    evaluate_study_small_dataset(version='self-consistency', start_row=start, k=num_charters_to_evaluate, temperature=0.8, max_iter=2)
+
+def evaluate_few_shots_CoT(start = 0, num_charters_to_evaluate = 100):
+    evaluate_study_small_dataset(version='few-shots-CoT', start_row=start, k=num_charters_to_evaluate, temperature=0, max_iter=3)
+
+def evaluate_baseline(start = 0, num_charters_to_evaluate = 100):
+    evaluate_study_small_dataset(version='baseline', start_row=start, k=num_charters_to_evaluate, temperature=0.7, max_iter=3)
 
 if __name__ == '__main__':
-    test_1()
+    evaluate_baseline()
