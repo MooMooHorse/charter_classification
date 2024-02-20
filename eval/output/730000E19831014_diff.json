@@ -1,0 +1,6 @@
+{
+    "alternative_answer": "Y",
+    "alternative_reference": ["Section 1. Limitation of Directors' Liability. The liability of the directors of this corporation for monetary damages shall be eliminated to the fullest extent permissible under California law."],
+    "reason": "The provision in the charter that eliminates directors' liability for monetary damages to the fullest extent permissible under California law aligns with the concept of a 102(b)(7) waiver, which is a provision commonly found in Delaware law. Even though the charter does not explicitly mention the term '102(b)(7) waiver,' the essence of the provision corresponds to the intent of a 102(b)(7) waiver.",
+    "correct": false
+}

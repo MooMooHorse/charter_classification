@@ -36,7 +36,7 @@ def _get_l_to_r_case_text_w_ground_truth(l: int, r: int, csv_file_name = 'proces
             charter_id unique for each charter
     '''
     dm = DataManager()
-    df = dm.load_processed_data(csv_file_name = csv_file_name)
+    df = dm.load_processed_data(fname = csv_file_name)
     r = min(r, len(df))
     sliced_df = df.iloc[l:r+1]
     text = sliced_df['text'].tolist()
@@ -62,7 +62,7 @@ def _assemble_message_list(material, eval_prompt = 'baseline.prompt'):
 
 
 
-def _store_reuslt(material, completion, ground_truth, index = '1'):
+def _store_reuslt(material, completion:str , ground_truth, index = '1'):
     '''
     The result stored should contains:
     1. raw material of charter
@@ -147,29 +147,36 @@ def embeddeing_and_cluster(texts:List[str], ids:List[str], num_clusters = 5, itf
 
     return representative_texts, selected_ids, errors
 
-def evaluate_study_20():
-    evaluate_dir = os.path.join(eval_output, 'study_20')
+def evaluate_study(study_name = 'study_20'):
+    evaluate_dir = os.path.join(eval_output, study_name)
     # iterate through the directory and evaluate the results
     num_errors = 0
+    num_Y = 0
     hit = 0
     miss = 0
+    miss_list = []
     ave_confidence = 0
     for file in os.listdir(evaluate_dir):
         with open(os.path.join(evaluate_dir, file), 'r') as f:
             data = json.load(f)
             completion = data['completion']['answer']
             ground_truth = data['ground_truth']
+            if ground_truth == 'Y':
+                num_Y += 1
             if completion == 'E':
                 num_errors += 1
             elif completion == ground_truth:
                 hit += 1
             else:
+                # extract case id study_{id}.json
+                miss_list.append(file.split('.')[0].split('_')[1])
                 miss += 1
             if completion != 'E':
                 ave_confidence += data['completion']['confidence']
     print(f'Errors: {num_errors}, Hit: {hit}, Miss: {miss}')
     print(f'Average confidence: {ave_confidence/(hit + miss)}')
-
+    print(f'Y: {num_Y}, N: {hit + miss - num_Y}')
+    print(f'Miss list: {miss_list}')
 
 
 def apply_embedding_to_study_20():
@@ -220,4 +227,5 @@ if __name__ == '__main__':
     # study_first_k_cases(start_row=100, k=8)
     # evaluate_study_20()
     # apply_difference_evaluation()
-    pass
+    evaluate_study(study_name='baseline')
+    # apply_difference_evaluation(study_dir='few-shots-CoT', study_ids=['104918C20120606', '730000E19831014', '900075D20161216', '1002637D20070510'])

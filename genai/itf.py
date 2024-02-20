@@ -22,7 +22,6 @@ class OpenAIITF():
         """
         from openai import OpenAI
         client = OpenAI()
-
         return client.chat.completions.create(
             model=model,
             messages=messages,
